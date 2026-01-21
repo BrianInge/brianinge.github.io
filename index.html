@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <title>Calculadora Repuestos</title>
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💰</text></svg>">
+    
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Arial', sans-serif; }
+        
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --success: #10b981;
+            --dark: #1f2937;
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .app-header {
+            color: white;
+            text-align: center;
+            margin-bottom: 20px;
+            padding-top: 10px;
+        }
+        
+        .app-header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        
+        .app-header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        
+        .calculator-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--dark);
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .input-with-icon {
+            position: relative;
+        }
+        
+        input {
+            width: 100%;
+            padding: 18px 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 18px;
+            background: #f9fafb;
+            transition: all 0.3s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+        
+        .currency-symbol {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6b7280;
+            font-weight: bold;
+        }
+        
+        .btn-calculate {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            border: none;
+            padding: 20px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: bold;
+            margin: 25px 0;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .btn-calculate:active {
+            transform: scale(0.98);
+        }
+        
+        .results {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            border-radius: 15px;
+            padding: 25px;
+            color: white;
+            margin-top: auto;
+            display: none;
+        }
+        
+        .results.visible {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .result-title {
+            font-size: 16px;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+        
+        .result-main {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        
+        .result-details {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .formula-info {
+            background: #f3f4f6;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            font-size: 13px;
+            color: #4b5563;
+        }
+        
+        .history-btn {
+            background: var(--dark);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 20px;
+            font-size: 12px;
+            opacity: 0.8;
+        }
+        
+        /* Modal para historial */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-header h2 {
+            color: var(--dark);
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #6b7280;
+        }
+        
+        .history-item {
+            border-bottom: 1px solid #e5e7eb;
+            padding: 15px 0;
+        }
+        
+        .history-item:last-child {
+            border-bottom: none;
+        }
+        
+        @media (max-width: 360px) {
+            .calculator-card {
+                padding: 20px;
+            }
+            
+            input {
+                padding: 15px;
+                font-size: 16px;
+            }
+            
+            .result-main {
+                font-size: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-header">
+        <h1>💰 Calculadora Repuestos</h1>
+        <p>Calcula precios con diferencia cambiaria</p>
+    </div>
+    
+    <div class="calculator-card">
+        <div class="form-group">
+            <label for="costoUSD">Costo en USD</label>
+            <div class="input-with-icon">
+                <input type="number" id="costoUSD" step="0.01" min="0" placeholder="0.00" value="10">
+                <span class="currency-symbol">$</span>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="tasaCompra">Tasa compra dólares</label>
+            <div class="input-with-icon">
+                <input type="number" id="tasaCompra" step="0.01" min="0" placeholder="0.00" value="490">
+                <span class="currency-symbol">Bs/$</span>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="tasaBCV">Tasa BCV para venta</label>
+            <div class="input-with-icon">
+                <input type="number" id="tasaBCV" step="0.01" min="0" placeholder="0.00" value="347.26">
+                <span class="currency-symbol">Bs/$</span>
+            </div>
+        </div>
+        
+        <button class="btn-calculate" onclick="calcular()">CALCULAR PRECIO</button>
+        
+        <div class="formula-info">
+            <strong>Fórmula:</strong> Precio Bs = Costo USD × (Tasa compra + 0.30 × Tasa BCV)
+            <br><small>El 30% es tu margen de ganancia</small>
+        </div>
+        
+        <div class="results" id="results">
+            <div class="result-title">PRECIO DE VENTA:</div>
+            <div class="result-main" id="precioFinal">0,00 Bs</div>
+            <div class="result-details">
+                <div>Equivale a <strong id="equivUSD">0.00 USD</strong> (tasa BCV)</div>
+                <div>Ganancia: <strong id="ganancia">0.00 USD</strong> (30% del costo)</div>
+                <div id="fechaCalculo"></div>
+            </div>
+            <button class="history-btn" onclick="mostrarHistorial()">Ver Historial</button>
+        </div>
+    </div>
+    
+    <div class="footer">
+        Versión 1.0 • Para tu negocio de repuestos
+    </div>
+    
+    <!-- Modal de historial -->
+    <div class="modal" id="historyModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📊 Historial de Cálculos</h2>
+                <button class="close-modal" onclick="cerrarModal()">×</button>
+            </div>
+            <div id="historyList"></div>
+            <button class="btn-calculate" onclick="limpiarHistorial()" style="margin-top: 20px; background: #ef4444;">
+                Limpiar Historial
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Historial en localStorage
+        let historial = JSON.parse(localStorage.getItem('calcHistorial')) || [];
+        
+        function calcular() {
+            // Obtener valores
+            const costo = parseFloat(document.getElementById('costoUSD').value);
+            const tasaCompra = parseFloat(document.getElementById('tasaCompra').value);
+            const tasaBCV = parseFloat(document.getElementById('tasaBCV').value);
+            
+            // Validar
+            if (!costo || !tasaCompra || !tasaBCV || 
+                costo <= 0 || tasaCompra <= 0 || tasaBCV <= 0) {
+                alert("Por favor ingresa valores válidos mayores a 0");
+                return;
+            }
+            
+            // Calcular
+            const precioBs = costo * (tasaCompra + 0.30 * tasaBCV);
+            const equivUSD = precioBs / tasaBCV;
+            const gananciaUSD = 0.30 * costo;
+            
+            // Formatear
+            const formato = (num, dec = 2) => 
+                num.toFixed(dec).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+            
+            // Mostrar resultados
+            document.getElementById('precioFinal').textContent = `${formato(precioBs)} Bs`;
+            document.getElementById('equivUSD').textContent = `${formato(equivUSD)} USD`;
+            document.getElementById('ganancia').textContent = `${formato(gananciaUSD)} USD`;
+            
+            const ahora = new Date();
+            document.getElementById('fechaCalculo').innerHTML = 
+                `<small>${ahora.toLocaleDateString()} ${ahora.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</small>`;
+            
+            // Mostrar contenedor de resultados
+            document.getElementById('results').classList.add('visible');
+            
+            // Guardar en historial
+            const calculo = {
+                fecha: ahora.toISOString(),
+                costo,
+                tasaCompra,
+                tasaBCV,
+                precioBs,
+                equivUSD,
+                gananciaUSD
+            };
+            
+            historial.unshift(calculo); // Agregar al inicio
+            if (historial.length > 20) historial = historial.slice(0, 20); // Limitar a 20
+            localStorage.setItem('calcHistorial', JSON.stringify(historial));
+            
+            // Guardar como último cálculo
+            localStorage.setItem('ultimoCalculo', JSON.stringify({
+                costo, tasaCompra, tasaBCV
+            }));
+        }
+        
+        function mostrarHistorial() {
+            const modal = document.getElementById('historyModal');
+            const list = document.getElementById('historyList');
+            
+            if (historial.length === 0) {
+                list.innerHTML = '<p style="text-align: center; color: #6b7280; padding: 20px;">No hay cálculos en el historial</p>';
+            } else {
+                list.innerHTML = historial.map((calc, i) => `
+                    <div class="history-item">
+                        <strong>#${i+1}</strong> - ${new Date(calc.fecha).toLocaleString()}
+                        <div style="font-size: 12px; margin-top: 5px;">
+                            Costo: $${calc.costo} | Tasa compra: ${calc.tasaCompra} Bs | Tasa BCV: ${calc.tasaBCV} Bs
+                        </div>
+                        <div style="color: var(--primary); font-weight: bold; margin-top: 5px;">
+                            Precio: ${calc.precioBs.toFixed(2)} Bs ($${calc.equivUSD.toFixed(2)} USD)
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            modal.style.display = 'flex';
+        }
+        
+        function cerrarModal() {
+            document.getElementById('historyModal').style.display = 'none';
+        }
+        
+        function limpiarHistorial() {
+            if (confirm("¿Estás seguro de limpiar todo el historial?")) {
+                historial = [];
+                localStorage.removeItem('calcHistorial');
+                mostrarHistorial();
+            }
+        }
+        
+        // Cargar último cálculo al iniciar
+        window.onload = function() {
+            const ultimo = JSON.parse(localStorage.getItem('ultimoCalculo'));
+            if (ultimo) {
+                document.getElementById('costoUSD').value = ultimo.costo || 10;
+                document.getElementById('tasaCompra').value = ultimo.tasaCompra || 490;
+                document.getElementById('tasaBCV').value = ultimo.tasaBCV || 347.26;
+            }
+            
+            // Calcular automáticamente
+            setTimeout(calcular, 100);
+            
+            // Permitir Enter para calcular
+            document.querySelectorAll('input').forEach(input => {
+                input.addEventListener('keypress', e => {
+                    if (e.key === 'Enter') calcular();
+                });
+            });
+            
+            // Cerrar modal al hacer clic fuera
+            document.getElementById('historyModal').addEventListener('click', function(e) {
+                if (e.target === this) cerrarModal();
+            });
+        };
+        
+        // Detectar si está instalado como PWA
+        if ('serviceWorker' in navigator && 'standalone' in window.navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js').catch(() => {});
+            });
+        }
+    </script>
+</body>
+</html>
